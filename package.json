@@ -1,0 +1,24 @@
+{
+	"name": "img2font",
+	"version": "1.0.0",
+	"description": "convert images to font",
+	"homepage": "https://github.com/awasaka01/img2font#readme",
+	"bugs": {
+		"url": "https://github.com/awasaka01/img2font/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/awasaka01/img2font.git"
+	},
+	"license": "ISC",
+	"author": "",
+	"type": "module",
+	"main": "main.js",
+	"dependencies": {
+		"nodemon": "^3.1.10",
+		"svgtofont": "^6.3.2"
+	},
+	"pnpm": {
+		"neverBuiltDependencies": []
+	}
+}

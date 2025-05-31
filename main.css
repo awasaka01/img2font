@@ -1,0 +1,55 @@
+canvas {
+	image-rendering: optimizeSpeed;             /* Older versions of FF          */
+	image-rendering: -moz-crisp-edges;          /* FF 6.0+                       */
+	image-rendering: -webkit-optimize-contrast; /* Safari                        */
+	image-rendering: -o-crisp-edges;            /* OS X & Windows Opera (12.02+) */
+	image-rendering: pixelated;                 /* Awesome future-browsers       */
+	-ms-interpolation-mode: nearest-neighbor;   /* IE                            */
+	display: flex;
+	flex-grow: 1;
+}
+
+
+
+#canvas-list {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+}
+.container {
+	display: flex;
+	gap: 20px;
+	flex-direction: row;
+	position: relative;
+}
+
+.grid {
+	display: grid;
+	width: 100%;
+	height: 100%;
+}
+
+.grid > div {
+	content: " ";
+	border: 1;
+	display: flex;
+	flex-grow: 1;
+	box-sizing: border-box;
+}
+.grid > div:hover {
+	background-color: rgba(24, 147, 255, 0.403);
+}
+
+
+/* 
+#canvas-list > div {
+	display: flex;
+	position: relative;
+}
+#canvas-list > div > table {
+	display: flex;
+	flex-direction: column;
+	position: absolute;
+	width: 100%;
+	height: 100%;
+} */

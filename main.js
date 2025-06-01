@@ -15,9 +15,10 @@ const IMAGE_PROPERTIES = {
 	"character_height": 16,
 	"gap_around": 1,
 	"characters_per_row": 10,
+	"border_color": "#b64b3d",
 };
 
-// Shorten variable names
+// Shorten variable names 🌱A🌱
 const perRow = IMAGE_PROPERTIES.characters_per_row;
 
 
@@ -63,15 +64,13 @@ const BLOCKS = {
 };
 
 document.addEventListener("DOMContentLoaded", async () => {
-	const BLOCKS_DATA = await generateData();
+	const BLOCKS_LIST = await generateData();
 
-	console.log(BLOCKS_DATA);
-	generateTemplateImages();
+	generateHTMLSectionsAll(BLOCKS_LIST);
 
+	generateTemplateImages(BLOCKS_LIST);
 
-
-
-
+	setupMouseEvents(BLOCKS_LIST);
 });
 
 
@@ -86,12 +85,15 @@ async function generateData () {
 			name,
 			characters: [],
 			height: 0,
+			rangeStart: ranges[0][0].toString(16).toUpperCase().padStart(4, "0"),
+
 			// Extended Data:
+			activeCharacter: undefined,
 			elements: {
 				fg: undefined,
 				bg: undefined,
 				grid: undefined,
-				infotext: undefined,
+				info: { position: undefined, utfCode: undefined, name: undefined },
 			},
 		};
 
@@ -99,7 +101,7 @@ async function generateData () {
 		ranges.forEach(([start, end]) => {
 			for (let i = start; i <= end; i++) {
 				const obj = generateCharacterObjectFromUTFCode(i.toString(16).toUpperCase().padStart(4, "0"), i);
-				block.characters.push(obj);
+				if (obj !== undefined) block.characters.push(obj);
 			}
 		});
 		block.height = Math.ceil(block.characters.length / perRow);
@@ -116,7 +118,7 @@ async function generateData () {
 				row: 0, col: 0,
 				topLeft: { x: 0, y: 0 },
 				bottomRight: { x: 0, y: 0 },
-				domElement: undefined,
+				element: undefined,
 
 				utfcode: utfcode,
 				name: name,
@@ -140,14 +142,142 @@ async function generateData () {
 	});
 }
 
-function generateExtendedData (params) {
+function generateHTMLSectionsAll (BLOCKS_LIST) {
+	const templatesContainer = document.getElementById("templates");
+
+	BLOCKS_LIST.forEach((block) => {
+		const blockSection = document.createElement("section");
+
+
+		blockSection.innerHTML = `
+		<section class="template">
+			<div class="character-table-title">U+${block.rangeStart} <b>${block.name}</b></div>
+			<div class="character-table", style="grid-template-columns: repeat(${perRow}, auto)"></div>
+
+			<div class="image-title">↓ Download Template Image Below ↓</div>
+			<div class="layers"><div class="wrapper"><canvas class="fg"></canvas><canvas class="bg"></canvas></div></div>
+			<div class="character-description">
+					<span><p class="title">Name:</p><br></span>
+					<p class="name" style="margin-bottom: auto">0</p>
+		
+					<p class="title">Position:</p>
+					<p class="position">6</p>
+
+					<p class="title">UTF code:</p>
+					<p class="utf-code">1231</p>
+			</div>
+		</section>`;
+
+		block.elements.grid = blockSection.getElementsByClassName("character-table")[0];
+		block.elements.fg = blockSection.getElementsByClassName("fg")[0];
+		block.elements.bg = blockSection.getElementsByClassName("bg")[0];
+		block.elements.info = {
+			position: blockSection.getElementsByClassName("position")[0],
+			utfCode: blockSection.getElementsByClassName("utf-code")[0],
+			name: blockSection.getElementsByClassName("name")[0],
+		};
+
+		// Add cell to grid for each character
+		block.characters.forEach((char, i) => {
+			const cell = document.createElement("div");
+			cell.innerHTML = char.symbol;
+			block.characters[i].element = cell;
+			block.elements.grid.appendChild(cell);
+		});
+
+		templatesContainer.appendChild(blockSection);
+	});
+}
+
+
+
+
+
+function setupMouseEvents (BLOCKS_LIST) {
+	BLOCKS_LIST.forEach((block) => {
+		const bg = block.elements.bg;
+		const ctx = bg.getContext("2d");
+		ctx.fillStyle = "rgba(255, 255, 255, 1)";
+
+
+
+		function activateCharacter (character) {
+
+			// Do nothing if character is already active
+			if (block.activeCharacter === character) return;
+
+			block.activeCharacter = character;
+			character.element.classList.add("active");
+			ctx.clearRect(0, 0, bg.width, bg.height);
+			ctx.fillRect(character.topLeft.x, character.topLeft.y, IMAGE_PROPERTIES.character_width, IMAGE_PROPERTIES.character_height);
+
+			// Update text
+			block.elements.info.position.textContent = `(${character.row + 1}, ${character.col + 1})`;
+			block.elements.info.name.textContent = character.name;
+			block.elements.info.utfCode.innerHTML = "U+" + character.utfcode + "<br>";
+		}
+
+		function deactivateCharacter (character) {
+			if (block.activeCharacter === character) block.activeCharacter = undefined;
+			character.element.classList.remove("active");
+			ctx.clearRect(0, 0, bg.width, bg.height);
+		}
+
+
+		block.characters.forEach((char) => {
+			char.element.addEventListener("mouseenter", () => activateCharacter(char, block, ctx));
+			char.element.addEventListener("mouseleave", () => deactivateCharacter(char, block));
+		});
+
+		block.elements.fg.addEventListener("mousemove", (e) => {
+
+			// Get position of cursor
+			const rect = e.target.getBoundingClientRect();
+			const x = Math.round(e.clientX - rect.left);
+			const y = Math.round(e.clientY - rect.top);
+
+			// Get block mouse is on
+			const character = block.characters.find((char) => char.topLeft.x <= x && char.topLeft.y <= y && char.bottomRight.x >= x && char.bottomRight.y >= y);
+			if (!character || character === block.activeCharacter) return;
+
+			// Deactivate old character
+			if (block.activeCharacter !== undefined) deactivateCharacter(block.activeCharacter);
+
+			// Activate current character
+			activateCharacter(character);
+		});
+		block.elements.fg.addEventListener("mouseleave", () => deactivateCharacter(block.activeCharacter));
+	});
 
 }
 
 
-function generateTemplateImages (params) {
 
+
+function generateTemplateImages (BLOCKS_LIST) {
+	BLOCKS_LIST.forEach((block) => {
+
+		const canvas = block.elements.fg;
+		const ctx = canvas.getContext("2d");
+		const canvasBG = block.elements.bg;
+		const ctxBG = canvasBG.getContext("2d");
+
+		// Calculate width and height
+		const width = (IMAGE_PROPERTIES.character_width * perRow) + (IMAGE_PROPERTIES.gap_around * (perRow + 1));
+		const height = (IMAGE_PROPERTIES.character_height * block.height) + (IMAGE_PROPERTIES.gap_around * (block.height + 1));
+		canvas.width = width; canvas.height = height; canvasBG.width = width; canvasBG.height = height;
+
+
+		// Fill the background with border color and then cut out the character boxes, for clean lines
+		ctx.fillStyle = IMAGE_PROPERTIES.border_color;
+		ctx.fillRect(0, 0, canvasBG.width, canvasBG.height);
+		block.characters.forEach((char) => {
+			ctx.clearRect(char.topLeft.x, char.topLeft.y, IMAGE_PROPERTIES.character_width, IMAGE_PROPERTIES.character_height);
+		});
+	});
 }
+
+
 
 function generateFontFromFiles (params) {
 

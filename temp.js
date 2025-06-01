@@ -138,8 +138,6 @@ console.log(BLOCKS_DATA);
 		container.appendChild(grid);
 		list.appendChild(container);
 	});
-}, { once: true });
-
 
 // const PORT = 3000;
 

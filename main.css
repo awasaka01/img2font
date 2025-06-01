@@ -1,21 +1,189 @@
 canvas {
-	image-rendering: optimizeSpeed;             /* Older versions of FF          */
-	image-rendering: -moz-crisp-edges;          /* FF 6.0+                       */
-	image-rendering: -webkit-optimize-contrast; /* Safari                        */
-	image-rendering: -o-crisp-edges;            /* OS X & Windows Opera (12.02+) */
-	image-rendering: pixelated;                 /* Awesome future-browsers       */
-	-ms-interpolation-mode: nearest-neighbor;   /* IE                            */
-	display: flex;
-	flex-grow: 1;
+	image-rendering: optimizeSpeed;
+	/* Older versions of FF          */
+	image-rendering: -moz-crisp-edges;
+	/* FF 6.0+                       */
+	image-rendering: -webkit-optimize-contrast;
+	/* Safari                        */
+	image-rendering: -o-crisp-edges;
+	/* OS X & Windows Opera (12.02+) */
+	image-rendering: pixelated;
+	/* Awesome future-browsers       */
+	-ms-interpolation-mode: nearest-neighbor;
+	/* IE                            */
+
+}
+
+@font-face {
+	font-family: "GNU Unifont";
+	src: url("./gnu-unifont.otf");
+}
+
+:root {
+	--fg-color: rgb(255, 255, 255);
+	--bg-color: rgb(26, 27, 25);}
+
+
+body {
+	font-family: "Consolas", "Monaco", monospace;
+	color: var(--fg-color);
+	background-color: var(--bg-color);
+}
+h1, p {
+	margin: 0;
+	padding: 0;
+}
+
+#templates {
+	
+	padding: 5%;
+}
+
+.template {
+	display: grid;
+	grid-template-columns: auto 1fr;
+	grid-template-rows: repeat(3, auto);
+	
+	grid-column-gap: 0px;
+	grid-row-gap: 0px;
+	width: 100%;
+	margin-bottom: 20px;
+	text-align: center;
+}
+
+
+.template .character-table-title {
+	grid-area: 1 / 1 / 2 / 2;
+	background-color: rgb(234, 198, 82);
+	width: 100%;
+	height: 100%;
+	color: var(--bg-color);
+	text-align: left;
+}
+.template .character-table {
+	grid-area: 2 / 1 / 4 / 2;
+	background-color: rgb(149, 116, 46);
+	width: 100%;
+	height: 100%;
+	display: grid;
+	font-family: "GNU Unifont";
+	align-items: baseline;
+    align-content: center;
+	font-size: 1.3rem;
+
+
+
+	& div {
+		text-align: center;
+	}
+	& div:hover, div.active {
+		background-color: rgb(255, 255, 255);
+		color: rgb(0, 0, 0);
+
+	}
 }
 
 
 
+.template .image-title {
+	grid-area: 1 / 2 / 2 / 3;
+	background-color: rgb(91, 208, 224);
+	width: 100%;
+	height: 100%;
+	font-size: 0.7rem;
+	color: var(--bg-color);
+
+	padding-right: 10px;
+	box-sizing: border-box;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+
+.template .layers {
+	grid-area: 2 / 2 / 3 / 3;
+	background-color: rgb(73, 180, 194); 
+	display: flex;
+	justify-content: center;
+align-items: center;
+
+
+	& .wrapper {
+		position: relative;
+	}
+	& canvas.fg {
+		z-index: 1;
+	}
+
+	& canvas.bg {
+		position: absolute;
+		top: 0; left: 0;
+		pointer-events: none;
+	}
+}
+
+
+.template .character-description {
+	background-color: rgb(39, 91, 106);
+	grid-area: 3 / 2 / 4 / 3;
+	width: 100%;
+	height: 100%;
+	display: grid;
+	grid-template-columns: min-content auto;
+	grid-template-rows: repeat(3, min-content);
+	text-align: left;
+
+	& .title {
+		text-align: right;
+		margin-right: 8px;
+	}
+
+	/* & span {
+		flex-grow: 1;
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		text-align: center;
+		margin: 5px 0;
+
+
+		& h1 {
+			font-size: 1.2rem;
+		}
+	}
+
+		& span:not(:last-child) {
+			border-right: 2px dashed rgba(245, 245, 245, 0.422);
+		} */
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
 #canvas-list {
 	display: flex;
 	flex-direction: column;
 	gap: 20px;
-}
+/* }
 .container {
 	display: flex;
 	gap: 20px;

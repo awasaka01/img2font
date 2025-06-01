@@ -1,88 +1,232 @@
 // https://unicode.org/Public/UNIDATA/UnicodeData.txt
-// import { readFileSync, writeFileSync } from "node:fs";
-// import path, { parse } from "node:path";
-// import http from "http";
 
+let UNICODE_FULL_LIST = [];
+const BLOCKS = [
+	{ link: "https://www.compart.com/en/unicode/block/U+0000", ranges: [[0x0020, 0x007E]], name: "Basic Latin -m" },
+	{ link: "https://www.compart.com/en/unicode/block/U+0080", ranges: [[0x0080, 0x00FF]], name: "Latin-1 Supplement" },
+	{ link: "https://www.compart.com/en/unicode/block/U+2000", ranges: [[0x2010, 0x2027], [0x2030, 0x205E]], name: "General Punctuation -m" },
+	{ link: "https://www.compart.com/en/unicode/block/U+2190", ranges: [[0x2190, 0x21FF]], name: "Arrows" },
+	{ link: "https://www.compart.com/en/unicode/block/U+2200", ranges: [[0x2200, 0x22FF]], name: "Mathematical Operators" },
+	{ link: "https://www.compart.com/en/unicode/block/U+2300", ranges: [[0x2300, 0x23FF]], name: "Miscellaneous Technical" },
+	{ link: "https://www.compart.com/en/unicode/block/U+2500", ranges: [[0x2500, 0x257F]], name: "Box Drawing" },
+	{ link: "https://www.compart.com/en/unicode/block/U+2580", ranges: [[0x2580, 0x259F]], name: "Block Elements" },
+	{ link: "https://www.compart.com/en/unicode/block/U+25A0", ranges: [[0x25A0, 0x25FF]], name: "Geometric Shapes" },
+	{ link: "https://www.compart.com/en/unicode/block/U+2600", ranges: [[0x2600, 0x26FF]], name: "Miscellaneous Symbols" },
+	{ link: "https://www.compart.com/en/unicode/block/U+27F0", ranges: [[0x27F0, 0x27FF]], name: "Supplemental Arrows A" },
+	{ link: "https://www.compart.com/en/unicode/block/U+2B00", ranges: [[0x2B00, 0x2BFF]], name: "Miscelennous Symbols and Arrows" },
+	{ link: "https://www.compart.com/en/unicode/block/U+FFF0", ranges: [[0xFFF0, 0XFFFF]], name: "Specials" },
+	{ link: "https://www.compart.com/en/unicode/block/U+FF00", ranges: [[0xFF01, 0xFFEE]], name: "Halfwidth and Fullwidth Forms" },
+	{ link: "https://www.compart.com/en/unicode/block/U+FE50", ranges: [[0xFE50, 0xFE6F]], name: "Small Form Variants" },
+	{ link: "https://www.compart.com/en/unicode/block/U+2654", ranges: [[0x2654, 0x265F]], name: "Chess Symbols -m" },
+	{ link: "https://www.compart.com/en/unicode/block/U+1F800", ranges: [[0x1F800, 0x1F8FF]], name: "Supplemental Arrows C" },
+	{ link: "https://www.compart.com/en/unicode/block/U+1F780", ranges: [[0x1F780, 0x1F7D8]], name: "Geometric Shapes Extended" },
+	{ link: "https://www.compart.com/en/unicode/block/U+1F700", ranges: [[0x1F700, 0x1F77F]], name: "Alchemical Symbols" },
+];
 
-
-
-
-// Config
-const PORT = 5500;
-
-const IMAGE_PROPERTIES = {
+// default options
+let user_options = {
 	"character_width": 8,
 	"character_height": 16,
 	"gap_around": 1,
 	"characters_per_row": 10,
 	"border_color": "#b64b3d",
+	"font": "GNU Unifont",
 };
 
-// Shorten variable names 🌱A🌱
-const perRow = IMAGE_PROPERTIES.characters_per_row;
+function formatFileName (name) {
+	return name.replace(/\s+/g, "_").toLowerCase();
+}
 
 
-const BLOCKS = {
-	"Basic Latin -m": [[0x0020, 0x007E]],
-	// ↑ https://www.compart.com/en/unicode/block/U+0000
-	"Latin-1 Supplement": [[0x0080, 0x00FF]],
-	// ↑ https://www.compart.com/en/unicode/block/U+0080
-	"General Punctuation -m": [[0x2010, 0x2027], [0x2030, 0x205E]],
-	// ↑ https://www.compart.com/en/unicode/block/U+2000
-	"Arrows": [[0x2190, 0x21FF]],
-	// ↑ https://www.compart.com/en/unicode/block/U+2190
-	"Mathematical Operators": [[0x2200, 0x22FF]],
-	// ↑ https://www.compart.com/en/unicode/block/U+2200
-	"Miscellaneous Technical": [[0x2300, 0x23FF]],
-	// ↑ https://www.compart.com/en/unicode/block/U+2300
-	"Box Drawing": [[0x2500, 0x257F]],
-	// ↑ https://www.compart.com/en/unicode/block/U+2500
-	"Block Elements": [[0x2580, 0x259F]],
-	// ↑ https://www.compart.com/en/unicode/block/U+2580
-	"Geometric Shapes": [[0x25A0, 0x25FF]],
-	// ↑ https://www.compart.com/en/unicode/block/U+25A0
-	"Miscellaneous Symbols": [[0x2600, 0x26FF]],
-	// ↑ https://www.compart.com/en/unicode/block/U+2600
-	"Supplemental Arrows A": [[0x27F0, 0x27FF]],
-	// ↑ https://www.compart.com/en/unicode/block/U+27F0
-	"Miscelennous Symbols and Arrows": [[0x2B00, 0x2BFF]],
-	// ↑ https://www.compart.com/en/unicode/block/U+2B00
-	"Specials": [[0xFFF0, 0XFFFF]],
-	// ↑ https://www.compart.com/en/unicode/block/U+FFF0
-	"Halfwidth and Fullwidth Forms": [[0xFF01, 0xFFEE]],
-	// ↑ https://www.compart.com/en/unicode/block/U+FF00
-	"Small Form Variants": [[0xFE50, 0xFE6F]],
-	// ↑ https://www.compart.com/en/unicode/block/U+FE50
-	"Chess Symbols -m": [[0x2654, 0x265F]],
-	// ↑ https://www.compart.com/en/unicode/block/U+2654
-	"Supplemental Arrows C": [[0x1F800, 0x1F8FF]],
-	// ↑ https://www.compart.com/en/unicode/block/U+1F800
-	"Geometric Shapes Extended": [[0x1F780, 0x1F7D8]],
-	// ↑ https://www.compart.com/en/unicode/block/U+1F780
-	"Alchemical Symbols": [[0x1F700, 0x1F77F]],
-	// ↑ https://www.compart.com/en/unicode/block/U+1F700
-};
 
 document.addEventListener("DOMContentLoaded", async () => {
-	const BLOCKS_LIST = await generateData();
+	console.log("DOM loaded");
 
-	generateHTMLSectionsAll(BLOCKS_LIST);
+	// Load the unicode list
+	const res = await fetch("./assets/unicode.txt");
+	if (!res.ok) return alert("Catastrophic error!\n:(");
+	const text = await res.text();
+	UNICODE_FULL_LIST = text.split("\n").map((x) => x.split(";").slice(0, 2));
 
-	generateTemplateImages(BLOCKS_LIST);
+	// Setup live-updating options
+	setupLiveUpdatingOptions();
 
-	setupMouseEvents(BLOCKS_LIST);
+	generateTemplateImages(); // temp
 });
 
 
+
+
+
+
+
+function setupLiveUpdatingOptions () {
+	const root = document.querySelector(":root");
+
+	// Font
+	document.getElementById("font").addEventListener("input", (e) => { root.style.setProperty("--font", e.target.value); });
+}
+
+
+// Geneterate the template images, with corresponding character table
+async function generateTemplateImages () {
+
+	// Reset
+	// user_options = getCurrentOptions();
+	document.getElementById("templates").innerHTML = "";
+
+
+	// Generate the data for each block, using current options
+	const BLOCKS_LIST = await generateBaseData(BLOCKS);
+	console.log(BLOCKS_LIST);
+
+
+
+
+
+	const templatesContainer = document.getElementById("templates");
+	BLOCKS_LIST.forEach((block) => {
+
+	// -------------------------------------------------------------------------------------------------------------
+	//	ANCHOR 	Generate the HTML for the current block
+	// -------------------------------------------------------------------------------------------------------------
+
+		const blockSection = document.createElement("div");
+		blockSection.classList.add("template");
+		blockSection.innerHTML = `
+			<div class="character-table-title">U+${block.rangeStart} <b>${block.name}</b></div>
+			<div class="character-table", style="grid-template-columns: repeat(${user_options.characters_per_row}, auto)"></div>
+
+			<div class="download-link"><a download="${formatFileName(block.name)}.png">⤓ Click here to download image ⤓</a></div>
+			<div class="layers"><div class="wrapper"><canvas class="fg" oncontextmenu="return false;"></canvas><canvas class="bg"></canvas></div></div>
+			<div class="character-description">
+					<span><p class="title">Name:</p><br></span>
+					<p class="name" style="margin-bottom: auto">0</p>
+					
+					<p class="title">Position:</p>
+					<p class="position">6</p>
+
+					<p class="title">UTF code:</p>
+					<p class="utf-code">1231</p>
+			</div>`;
+		templatesContainer.appendChild(blockSection);
+		console.log(blockSection);
+
+		// Setup the download link
+		const download = blockSection.getElementsByClassName("download-link")[0].firstChild;
+		download.onclick = (e) => e.target.href = fg.toDataURL("image/png");
+
+		// Add cell to grid for each character
+		const grid = blockSection.getElementsByClassName("character-table")[0];
+		block.characters.forEach((char, i) => {
+			const cell = document.createElement("div");
+			cell.innerHTML = char.symbol;
+			block.characters[i].element = cell;
+			grid.appendChild(cell);
+		});
+
+
+
+
+	// -------------------------------------------------------------------------------------------------------------
+	//	ANCHOR  Draw the image for the current block
+	// -------------------------------------------------------------------------------------------------------------
+
+		const fg = blockSection.getElementsByClassName("fg")[0];
+		const bg = blockSection.getElementsByClassName("bg")[0];
+		const ctx = fg.getContext("2d");
+
+		// Calculate width and height of canvas
+		const width = (user_options.character_width * user_options.characters_per_row) + (user_options.gap_around * (user_options.characters_per_row + 1));
+		const height = (user_options.character_height * block.height) + (user_options.gap_around * (block.height + 1));
+		fg.width = width; fg.height = height; bg.width = width; bg.height = height;
+
+		// Fill the background with border color and then cut out the character boxes, for clean lines
+		ctx.fillStyle = user_options.border_color;
+		ctx.fillRect(0, 0, bg.width, bg.height);
+		block.characters.forEach((char) => { ctx.clearRect(char.topLeft.x, char.topLeft.y, user_options.character_width, user_options.character_height); });
+
+
+
+
+	// -------------------------------------------------------------------------------------------------------------
+	//	ANCHOR  Register mouse events for the hover effects
+	// -------------------------------------------------------------------------------------------------------------
+
+		const info = {
+			position: blockSection.getElementsByClassName("position")[0],
+			utfCode: blockSection.getElementsByClassName("utf-code")[0],
+			name: blockSection.getElementsByClassName("name")[0],
+		};
+
+		const ctxBG = bg.getContext("2d");
+		ctxBG.fillStyle = "rgba(255, 255, 255, 1)";
+
+
+
+		function activateCharacter (character) {
+
+			block.activeCharacter = character;
+
+			character.element.classList.add("active");
+			ctxBG.clearRect(0, 0, bg.width, bg.height);
+			ctxBG.fillRect(character.topLeft.x, character.topLeft.y, user_options.character_width, user_options.character_height);
+
+			// Update text
+			info.position.textContent = `(${character.row + 1}, ${character.col + 1})`;
+			info.name.textContent = character.name;
+			info.utfCode.innerHTML = "U+" + character.utfcode + "<br>";
+		}
+
+		function deactivateCharacter (character) {
+			if (block.activeCharacter === character) block.activeCharacter = undefined;
+			character.element.classList.remove("active");
+			ctxBG.clearRect(0, 0, bg.width, bg.height);
+		}
+
+		// Activate character when hovering over the grid
+		block.characters.forEach((char) => {
+			char.element.addEventListener("mouseenter", () => activateCharacter(char, block, ctxBG));
+			char.element.addEventListener("mouseleave", () => deactivateCharacter(char, block));
+		});
+
+		// Activate character when hovering over the canvas
+		fg.addEventListener("mousemove", (e) => {
+
+			// Get position of cursor
+			const rect = e.target.getBoundingClientRect();
+			const mouse = { x: Math.round(e.clientX - rect.left), y: Math.round(e.clientY - rect.top) };
+
+			// Find block mouse is inside of
+			const character = block.characters.find((char) => char.topLeft.x <= mouse.x && char.topLeft.y <= mouse.y && char.bottomRight.x >= mouse.x && char.bottomRight.y >= mouse.y);
+			if (!character || character === block.activeCharacter) return;
+
+			// Deactivate old character
+			if (block.activeCharacter !== undefined) deactivateCharacter(block.activeCharacter);
+
+			// Activate current character
+			activateCharacter(character);
+		});
+		fg.addEventListener("mouseleave", () => deactivateCharacter(block.activeCharacter));
+
+
+
+		// end
+	});
+}
+
+
+
+
 // Generate the full data for each block
-async function generateData () {
-	const UNICODE_FULL_LIST = (await (await fetch("./unicode.txt")).text()).split("\n").map((x) => x.split(";").slice(0, 2));
+async function generateBaseData (BLOCKS_DATA_ENABLED) {
 
-	return Object.entries(BLOCKS).map(([name, ranges]) => {
-
+	return BLOCKS_DATA_ENABLED.map((obj) => {
+		const { name, ranges, link } = obj;
 		const block = {
 			// Generated Here:
 			name,
+			link,
 			characters: [],
 			height: 0,
 			rangeStart: ranges[0][0].toString(16).toUpperCase().padStart(4, "0"),
@@ -93,6 +237,7 @@ async function generateData () {
 				fg: undefined,
 				bg: undefined,
 				grid: undefined,
+				download: undefined,
 				info: { position: undefined, utfCode: undefined, name: undefined },
 			},
 		};
@@ -104,7 +249,7 @@ async function generateData () {
 				if (obj !== undefined) block.characters.push(obj);
 			}
 		});
-		block.height = Math.ceil(block.characters.length / perRow);
+		block.height = Math.ceil(block.characters.length / user_options.characters_per_row);
 
 		// Generate characters
 		function generateCharacterObjectFromUTFCode (utfcode, utfcodeInDecimal) {
@@ -127,14 +272,14 @@ async function generateData () {
 
 			// Calculate which row and column the character will be in the grid
 			const characterAmount = block.characters.length;
-			obj.row = characterAmount % perRow;
-			obj.col = Math.floor(characterAmount / perRow);
+			obj.row = characterAmount % user_options.characters_per_row;
+			obj.col = Math.floor(characterAmount / user_options.characters_per_row);
 
 			// Calculate the actual pixel position of the character in the image
-			obj.topLeft.x = (obj.row * IMAGE_PROPERTIES.character_width) + (IMAGE_PROPERTIES.gap_around * obj.row) + 1;
-			obj.topLeft.y = (obj.col * IMAGE_PROPERTIES.character_height) + (IMAGE_PROPERTIES.gap_around * obj.col) + 1;
-			obj.bottomRight.x = obj.topLeft.x + IMAGE_PROPERTIES.character_width;
-			obj.bottomRight.y = obj.topLeft.y + IMAGE_PROPERTIES.character_height;
+			obj.topLeft.x = (obj.row * user_options.character_width) + (user_options.gap_around * obj.row) + 1;
+			obj.topLeft.y = (obj.col * user_options.character_height) + (user_options.gap_around * obj.col) + 1;
+			obj.bottomRight.x = obj.topLeft.x + user_options.character_width;
+			obj.bottomRight.y = obj.topLeft.y + user_options.character_height;
 
 			return obj;
 		}
@@ -142,140 +287,11 @@ async function generateData () {
 	});
 }
 
-function generateHTMLSectionsAll (BLOCKS_LIST) {
-	const templatesContainer = document.getElementById("templates");
-
-	BLOCKS_LIST.forEach((block) => {
-		const blockSection = document.createElement("section");
-
-
-		blockSection.innerHTML = `
-		<section class="template">
-			<div class="character-table-title">U+${block.rangeStart} <b>${block.name}</b></div>
-			<div class="character-table", style="grid-template-columns: repeat(${perRow}, auto)"></div>
-
-			<div class="image-title">↓ Download Template Image Below ↓</div>
-			<div class="layers"><div class="wrapper"><canvas class="fg"></canvas><canvas class="bg"></canvas></div></div>
-			<div class="character-description">
-					<span><p class="title">Name:</p><br></span>
-					<p class="name" style="margin-bottom: auto">0</p>
-		
-					<p class="title">Position:</p>
-					<p class="position">6</p>
-
-					<p class="title">UTF code:</p>
-					<p class="utf-code">1231</p>
-			</div>
-		</section>`;
-
-		block.elements.grid = blockSection.getElementsByClassName("character-table")[0];
-		block.elements.fg = blockSection.getElementsByClassName("fg")[0];
-		block.elements.bg = blockSection.getElementsByClassName("bg")[0];
-		block.elements.info = {
-			position: blockSection.getElementsByClassName("position")[0],
-			utfCode: blockSection.getElementsByClassName("utf-code")[0],
-			name: blockSection.getElementsByClassName("name")[0],
-		};
-
-		// Add cell to grid for each character
-		block.characters.forEach((char, i) => {
-			const cell = document.createElement("div");
-			cell.innerHTML = char.symbol;
-			block.characters[i].element = cell;
-			block.elements.grid.appendChild(cell);
-		});
-
-		templatesContainer.appendChild(blockSection);
-	});
-}
 
 
 
 
 
-function setupMouseEvents (BLOCKS_LIST) {
-	BLOCKS_LIST.forEach((block) => {
-		const bg = block.elements.bg;
-		const ctx = bg.getContext("2d");
-		ctx.fillStyle = "rgba(255, 255, 255, 1)";
-
-
-
-		function activateCharacter (character) {
-
-			// Do nothing if character is already active
-			if (block.activeCharacter === character) return;
-
-			block.activeCharacter = character;
-			character.element.classList.add("active");
-			ctx.clearRect(0, 0, bg.width, bg.height);
-			ctx.fillRect(character.topLeft.x, character.topLeft.y, IMAGE_PROPERTIES.character_width, IMAGE_PROPERTIES.character_height);
-
-			// Update text
-			block.elements.info.position.textContent = `(${character.row + 1}, ${character.col + 1})`;
-			block.elements.info.name.textContent = character.name;
-			block.elements.info.utfCode.innerHTML = "U+" + character.utfcode + "<br>";
-		}
-
-		function deactivateCharacter (character) {
-			if (block.activeCharacter === character) block.activeCharacter = undefined;
-			character.element.classList.remove("active");
-			ctx.clearRect(0, 0, bg.width, bg.height);
-		}
-
-
-		block.characters.forEach((char) => {
-			char.element.addEventListener("mouseenter", () => activateCharacter(char, block, ctx));
-			char.element.addEventListener("mouseleave", () => deactivateCharacter(char, block));
-		});
-
-		block.elements.fg.addEventListener("mousemove", (e) => {
-
-			// Get position of cursor
-			const rect = e.target.getBoundingClientRect();
-			const x = Math.round(e.clientX - rect.left);
-			const y = Math.round(e.clientY - rect.top);
-
-			// Get block mouse is on
-			const character = block.characters.find((char) => char.topLeft.x <= x && char.topLeft.y <= y && char.bottomRight.x >= x && char.bottomRight.y >= y);
-			if (!character || character === block.activeCharacter) return;
-
-			// Deactivate old character
-			if (block.activeCharacter !== undefined) deactivateCharacter(block.activeCharacter);
-
-			// Activate current character
-			activateCharacter(character);
-		});
-		block.elements.fg.addEventListener("mouseleave", () => deactivateCharacter(block.activeCharacter));
-	});
-
-}
-
-
-
-
-function generateTemplateImages (BLOCKS_LIST) {
-	BLOCKS_LIST.forEach((block) => {
-
-		const canvas = block.elements.fg;
-		const ctx = canvas.getContext("2d");
-		const canvasBG = block.elements.bg;
-		const ctxBG = canvasBG.getContext("2d");
-
-		// Calculate width and height
-		const width = (IMAGE_PROPERTIES.character_width * perRow) + (IMAGE_PROPERTIES.gap_around * (perRow + 1));
-		const height = (IMAGE_PROPERTIES.character_height * block.height) + (IMAGE_PROPERTIES.gap_around * (block.height + 1));
-		canvas.width = width; canvas.height = height; canvasBG.width = width; canvasBG.height = height;
-
-
-		// Fill the background with border color and then cut out the character boxes, for clean lines
-		ctx.fillStyle = IMAGE_PROPERTIES.border_color;
-		ctx.fillRect(0, 0, canvasBG.width, canvasBG.height);
-		block.characters.forEach((char) => {
-			ctx.clearRect(char.topLeft.x, char.topLeft.y, IMAGE_PROPERTIES.character_width, IMAGE_PROPERTIES.character_height);
-		});
-	});
-}
 
 
 
@@ -286,3 +302,5 @@ function generateFontFromFiles (params) {
 function updateTextDisplayForBlock (block, characterSelection) {
 
 }
+
+// Generate the config area

@@ -13,15 +13,22 @@ canvas {
 	/* IE                            */
 
 }
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SignWriting&family=Noto+Sans+Symbols:wght@100..900&display=swap');
 
 @font-face {
 	font-family: "GNU Unifont";
-	src: url("./gnu-unifont.otf");
+	src: url("./assets/gnu-unifont.otf");
+}
+@font-face {
+	font-family: "NewtonSans";
+	src: url("./assets/NewtonSans.ttf");
 }
 
 :root {
 	--fg-color: rgb(255, 255, 255);
-	--bg-color: rgb(26, 27, 25);}
+	--bg-color: rgb(26, 27, 25);
+	--font: "GNU Unifont";
+}
 
 
 body {
@@ -35,13 +42,13 @@ h1, p {
 }
 
 #templates {
-	
-	padding: 5%;
+	margin: 0 auto;
+	max-width: 70%;
 }
 
 .template {
 	display: grid;
-	grid-template-columns: auto 1fr;
+	grid-template-columns: 1fr 1fr;
 	grid-template-rows: repeat(3, auto);
 	
 	width: 100%;
@@ -64,7 +71,7 @@ h1, p {
 	width: 100%;
 	height: 100%;
 	display: grid;
-	font-family: "GNU Unifont";
+	font-family: var(--font);
 	align-items: baseline;
     align-content: center;
 	font-size: 1.3rem;
@@ -73,6 +80,8 @@ h1, p {
 
 	& div {
 		text-align: center;
+		white-space: pre;
+		cursor: default;
 	}
 	& div:hover, div.active {
 		background-color: rgb(255, 255, 255);
@@ -83,13 +92,25 @@ h1, p {
 
 
 
-.template .image-title {
+.template .download-link {
 	grid-area: 1 / 2 / 2 / 3;
 	background-color: rgb(91, 208, 224);
 	width: 100%;
 	height: 100%;
-	font-size: 0.7rem;
+	font-size: 0.8rem;
 	color: var(--bg-color);
+
+	cursor: pointer;
+	a {
+		color: var(--bg-color);
+		text-decoration: underline;
+		text-decoration-thickness: 2px;
+		text-decoration-color: #0005;
+	}
+	a:hover {
+		color: rgb(123, 17, 17);
+		text-decoration-style: dashed;
+	}
 
 	padding-right: 10px;
 	box-sizing: border-box;
